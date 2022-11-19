@@ -2,54 +2,60 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import _debounce from "lodash/debounce";
-import * as BooksAPI from "../BooksAPI";
-import Book from "../Book";
+import * as BooksAPI from "./BooksAPI";
+import Book from "./Book";
 
 class SearchFunction extends React.Component {
   state = {
-    query: "",
-    searchBooks: [],
+    strQuery: "",
+    booksFound: [],
   };
 
   render() {
-    const { onUpdateShelf, books } = this.props;
+    const { bookList, onUpdateShelf } = this.props;
 
-    const updateResultSearch = (result) => {
+    const updateQuery = (newStrQuery) => {
       this.setState(() => ({
-        searchBooks: result,
+        strQuery: newStrQuery,
       }));
     };
 
-    const updateQuery = (str) => {
+    const updateBookList = (result) => {
       this.setState(() => ({
-        query: str,
+        booksFound: result,
       }));
     };
 
-    // Funtion handle search book
-    const handleSearch = _debounce(function (event) {
-      const strQuery = event.target.value.trim();
-      updateQuery(strQuery);
-      if (strQuery) {
-        BooksAPI.search(strQuery).then((searchBooks) => {
-          updateResultSearch(searchBooks);
+    const handleSearch = _debounce((event) => {
+      let newStrQuery = event.target.value.trim();
+      updateQuery(newStrQuery);
+      BooksAPI.search(newStrQuery)
+        .then((result) => {
+          if (result && result.length > 0) {
+            updateBookList(result);
+          } else {
+            updateBookList([]);
+          }
+        }, 150)
+        .catch((err) => {
+          console.err("Something's wrong happened in server: " + err);
+          updateBookList([]);
         });
-      } else {
-        updateResultSearch([]);
-      }
-    }, 200);
+    });
 
-    // Return list search books result
-    let lstSearchResults = [];
-    if (this.state.searchBooks.error !== "empty query") {
-      lstSearchResults = this.state.searchBooks.map((book) => {
-        const foundBook = books.find((bookSearch) => book.id === bookSearch.id);
-        if (foundBook) {
-          book.shelf = foundBook.shelf;
-        } else {
-          book.shelf = "none";
-        }
-        return <Book key={book.id} book={book} onUpdateShelf={onUpdateShelf} />;
+    // Getting book's shelf from book list.
+    let searchResult = [];
+    if (this.state.booksFound.length > 0) {
+      searchResult = this.state.booksFound.map((bookFound) => {
+        const bookInList = bookList.find((book) => bookFound.id === book.id);
+        bookFound.shelf = bookInList ? bookInList.shelf : "none";
+        return (
+          <Book
+            key={bookFound.id}
+            book={bookFound}
+            onUpdateShelf={onUpdateShelf}
+          />
+        );
       });
     }
 
@@ -62,19 +68,19 @@ class SearchFunction extends React.Component {
           <div className="search-books-input-wrapper">
             <input
               type="text"
-              placeholder="Search by title or author"
+              placeholder="Search by book's title or author..."
               onInput={handleSearch}
             />
           </div>
         </div>
         <div className="search-books-results">
           <ol className="books-grid">
-            {lstSearchResults.length > 0 && lstSearchResults}
+            {searchResult.length > 0 && searchResult}
           </ol>
 
-          {/* Show Not Found */}
-          {this.state.searchBooks.error === "empty query" &&
-            this.state.query !== "" && <div>Not found</div>}
+          {this.state.booksFound.length === 0 && this.state.strQuery !== "" && (
+            <div>Not found</div>
+          )}
         </div>
       </div>
     );

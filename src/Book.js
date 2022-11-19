@@ -1,9 +1,10 @@
 import React from "react";
 
-import ShelfClassification from "./ShelfClassification";
+import ShelfType from "./ShelfType";
 
 const Book = (props) => {
   const { book, onUpdateShelf } = props;
+
   return (
     <li>
       <div className="book">
@@ -12,8 +13,8 @@ const Book = (props) => {
             <div
               className="book-cover"
               style={{
-                width: 128,
-                height: 193,
+                width: 130,
+                height: 195,
                 backgroundImage: `url(${book.imageLinks.thumbnail})`,
               }}
             ></div>
@@ -21,19 +22,19 @@ const Book = (props) => {
             <div
               className="book-cover"
               style={{
-                width: 128,
-                height: 193,
-                backgroundImage: "",
+                width: 130,
+                height: 195,
+                backgroundImage: '',
               }}
             ></div>
           )}
-          <ShelfClassification book={book} onUpdateShelf={onUpdateShelf} />
+          <ShelfType book={book} onUpdateShelf={onUpdateShelf} />
         </div>
         <div className="book-title">{book.title}</div>
         <div className="book-authors">
           {book.authors !== undefined &&
-            book.authors.map((author, idx) =>
-              book.authors.length - 1 !== idx ? author + ", " : author
+            book.authors.map((author, currIndex) =>
+              currIndex !== book.authors.length - 1 ? author + ", " : author
             )}
         </div>
       </div>
